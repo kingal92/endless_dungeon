@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0a0b10" />
+    <meta name="description" content="Endless Dungeon — two-player online co-op dungeon crawler with loot, XP, bosses and quests." />
+    <title>Endless Dungeon — 2 Player Co-op</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <div id="hud" class="hidden">
+      <div id="topbar">
+        <div id="floor-info"></div>
+        <div id="room-info"></div>
+        <div class="topbar-buttons">
+          <button id="btn-gear" type="button">Gear</button>
+          <button id="btn-quests" type="button">Quests</button>
+        </div>
+      </div>
+      <div id="party"></div>
+      <div id="log"></div>
+      <div id="banner" class="hidden"></div>
+
+      <div id="touch" class="hidden">
+        <div id="stick-move" class="stick"><div class="knob"></div></div>
+        <div id="touch-actions">
+          <button id="btn-potion" class="round" type="button">Potion</button>
+          <button id="btn-dash" class="round" type="button">Dash</button>
+          <button id="btn-attack" class="round primary" type="button">Attack</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-gear" class="panel hidden">
+      <header><h2>Gear</h2><button class="close" data-close="panel-gear" type="button">✕</button></header>
+      <div id="gear-equipped"></div>
+      <h3>Backpack</h3>
+      <div id="gear-inventory"></div>
+    </div>
+
+    <div id="panel-quests" class="panel hidden">
+      <header><h2>Quests</h2><button class="close" data-close="panel-quests" type="button">✕</button></header>
+      <h3>Your contracts</h3>
+      <div id="quest-active"></div>
+      <h3>Quest board</h3>
+      <div id="quest-board"></div>
+    </div>
+
+    <div id="menu">
+      <div class="menu-card">
+        <h1>Endless Dungeon</h1>
+        <p class="tagline">Two-player online co-op. Endless floors, real loot, angry bosses.</p>
+        <label>Hero name <input id="input-name" maxlength="14" placeholder="Hero" /></label>
+        <label id="key-row" class="hidden">Purchase key <input id="input-key" placeholder="EDG-XXXXXXXXXX-XXXXXXXXXXXX" /></label>
+        <div class="class-picker">
+          <button class="class-option selected" data-class="warrior" type="button">
+            <strong>Warrior</strong><span>Melee cleave · tanky · 130 HP</span>
+          </button>
+          <button class="class-option" data-class="ranger" type="button">
+            <strong>Ranger</strong><span>Ranged shots · fast · high crit</span>
+          </button>
+        </div>
+        <button id="btn-create" class="primary" type="button">Create dungeon</button>
+        <div class="join-row">
+          <input id="input-code" maxlength="4" placeholder="CODE" />
+          <button id="btn-join" type="button">Join</button>
+        </div>
+        <p id="menu-error" class="error"></p>
+        <p class="hint">
+          PC: WASD/arrows to move · mouse to aim · click or Space to attack · Shift to dash · Q potion · E descend ·
+          I gear · J quests<br />
+          Mobile: left stick to move, buttons to attack/dash/heal
+        </p>
+      </div>
+    </div>
+
+    <div id="lobby" class="panel hidden">
+      <header><h2>Party lobby</h2></header>
+      <p>Share this code with your co-op partner:</p>
+      <div id="lobby-code"></div>
+      <div id="lobby-players"></div>
+      <button id="btn-ready" class="primary" type="button">Ready up</button>
+      <p class="hint">The run starts when every hero in the party is ready.</p>
+    </div>
+
+    <script src="bundle.js"></script>
+  </body>
+</html>
