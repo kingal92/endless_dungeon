@@ -1,0 +1,382 @@
+:root {
+  --bg: #0a0b10;
+  --panel: rgba(18, 20, 30, 0.94);
+  --edge: #2b3044;
+  --text: #e7eaf3;
+  --muted: #99a0b5;
+  --accent: #ffab24;
+  --danger: #ff5d5d;
+  --good: #5fd46a;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif;
+  touch-action: none;
+  user-select: none;
+}
+
+canvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  image-rendering: pixelated;
+}
+
+.hidden {
+  display: none !important;
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  background: #1b2032;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+button.primary {
+  background: linear-gradient(180deg, #c8801a, #8d5410);
+  border-color: #ffca70;
+  font-weight: bold;
+}
+
+input {
+  font: inherit;
+  color: var(--text);
+  background: #10131f;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+#hud button {
+  pointer-events: auto;
+}
+
+#topbar {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 14px;
+  max-width: calc(100vw - 16px);
+}
+
+.topbar-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+#party {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.party-card {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  padding: 6px 10px;
+  min-width: 190px;
+  font-size: 13px;
+}
+
+.party-card .bar {
+  height: 7px;
+  border-radius: 4px;
+  background: #2a2f42;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.party-card .bar > div {
+  height: 100%;
+}
+
+.bar.hp > div {
+  background: linear-gradient(90deg, #ff6b6b, #ff2f2f);
+}
+
+.bar.xp > div {
+  background: linear-gradient(90deg, #5fd46a, #2f9e42);
+}
+
+#log {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  width: min(46vw, 420px);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+  text-shadow: 0 1px 2px #000;
+}
+
+#banner {
+  position: absolute;
+  top: 32%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: clamp(20px, 4vw, 38px);
+  font-weight: bold;
+  text-shadow: 0 3px 14px #000;
+  pointer-events: auto;
+}
+
+#banner button {
+  display: block;
+  margin: 12px auto 0;
+}
+
+.panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, 94vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 14px;
+  padding: 16px;
+  z-index: 20;
+}
+
+.panel header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel h2 {
+  margin: 0 0 6px;
+}
+
+.panel h3 {
+  margin: 14px 0 6px;
+  font-size: 14px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.item-row,
+.quest-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border: 1px solid var(--edge);
+  border-radius: 9px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  background: #11141f;
+}
+
+.item-row .stats,
+.quest-row .meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+#menu {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 30%, #1a1f33, #05060a 70%);
+  z-index: 30;
+}
+
+.menu-card {
+  width: min(460px, 92vw);
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 16px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.menu-card h1 {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+}
+
+.tagline {
+  margin: 0;
+  color: var(--muted);
+}
+
+.class-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.class-option {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  padding: 10px;
+}
+
+.class-option span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.class-option.selected {
+  border-color: var(--accent);
+  background: #26200f;
+}
+
+.join-row {
+  display: flex;
+  gap: 8px;
+}
+
+.join-row input {
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
+.error {
+  color: var(--danger);
+  min-height: 18px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
+#lobby-code {
+  font-size: 44px;
+  letter-spacing: 0.35em;
+  text-align: center;
+  color: var(--accent);
+  font-weight: bold;
+}
+
+#lobby-players {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+#touch {
+  position: absolute;
+  inset: 0;
+}
+
+.stick {
+  position: absolute;
+  left: 22px;
+  bottom: 22px;
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: rgba(20, 24, 38, 0.45);
+  pointer-events: auto;
+}
+
+.stick .knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 54px;
+  height: 54px;
+  margin: -27px 0 0 -27px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+#touch-actions {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 10px;
+  align-items: end;
+}
+
+.round {
+  pointer-events: auto;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  font-size: 12px;
+}
+
+.round.primary {
+  width: 96px;
+  height: 96px;
+  font-size: 14px;
+}
+
+@media (max-width: 720px) {
+  #log {
+    width: 60vw;
+    bottom: 170px;
+  }
+  .party-card {
+    min-width: 150px;
+  }
+}

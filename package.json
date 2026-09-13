@@ -1,0 +1,35 @@
+{
+  "name": "endless-dungeon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Two-player online co-op endless dungeon crawler with loot, XP, bosses and quests.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build:client": "esbuild src/client/main.ts --bundle --minify --sourcemap --target=es2020 --format=iife --outfile=public/bundle.js",
+    "build:server": "tsc -p tsconfig.server.json",
+    "build": "npm run build:client && npm run build:server",
+    "dev": "npm run build:client -- --watch=forever & tsx watch src/server/index.ts",
+    "start": "node dist/server/index.js",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "express": "4.21.2",
+    "ws": "8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "4.17.21",
+    "@types/node": "20.17.12",
+    "@types/ws": "8.5.13",
+    "@typescript-eslint/eslint-plugin": "8.19.1",
+    "@typescript-eslint/parser": "8.19.1",
+    "esbuild": "0.24.2",
+    "eslint": "8.57.1",
+    "tsx": "4.19.2",
+    "typescript": "5.7.3"
+  }
+}
