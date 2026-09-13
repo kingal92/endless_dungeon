@@ -57,7 +57,9 @@ fly secrets set LICENSE_SECRET="$(openssl rand -hex 32)"   # only if you want th
 fly deploy
 ```
 
-**Render**: point a new Blueprint at `render.yaml`, then set `LICENSE_SECRET` in the dashboard.
+**Render**: point a new Blueprint at `render.yaml`. The Blueprint deploys with the paywall
+disabled; to enable it, add `LICENSE_SECRET` as a secret environment variable in the Render
+service's dashboard.
 
 The server serves the client bundle and the WebSocket endpoint from the same origin and port, so no
 CORS or separate CDN setup is needed. `/healthz` is the health probe.
