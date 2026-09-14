@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: endless-dungeon
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /healthz
+    envVars:
+      - key: PORT
+        value: 8080
