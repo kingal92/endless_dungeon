@@ -32,6 +32,34 @@ export class Ui {
   constructor(private hooks: UiHooks) {
     el('btn-gear').addEventListener('click', () => this.toggleGear());
     el('btn-quests').addEventListener('click', () => this.toggleQuests());
+    el('gear-inventory').addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest<HTMLElement>('[data-equip], [data-sell]');
+      if (!button) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (button.dataset.equip) this.hooks.onEquip(button.dataset.equip);
+      if (button.dataset.sell) this.hooks.onSell(button.dataset.sell);
+    });
+    el('quest-active').addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest<HTMLElement>('[data-turnin]');
+      if (!button?.dataset.turnin) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.hooks.onTurnInQuest(button.dataset.turnin);
+    });
+    el('quest-board').addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest<HTMLElement>('[data-accept]');
+      if (!button?.dataset.accept) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.hooks.onAcceptQuest(button.dataset.accept);
+    });
     document.querySelectorAll<HTMLElement>('[data-close]').forEach((button) => {
       button.addEventListener('click', () => {
         const target = button.dataset.close;
@@ -114,17 +142,6 @@ export class Ui {
     el('gear-inventory').innerHTML =
       self.inventory.map((item: Item) => this.itemRow(item)).join('') ||
       '<div class="item-row"><div class="stats">Backpack empty — go kill something.</div></div>';
-
-    el('gear-inventory')
-      .querySelectorAll<HTMLElement>('[data-equip]')
-      .forEach((button) =>
-        button.addEventListener('click', () => this.hooks.onEquip(String(button.dataset.equip)), { once: true }),
-      );
-    el('gear-inventory')
-      .querySelectorAll<HTMLElement>('[data-sell]')
-      .forEach((button) =>
-        button.addEventListener('click', () => this.hooks.onSell(String(button.dataset.sell)), { once: true }),
-      );
   }
 
   private itemRow(item: Item): string {
@@ -174,15 +191,5 @@ export class Ui {
       )
       .join('');
 
-    el('quest-active')
-      .querySelectorAll<HTMLElement>('[data-turnin]')
-      .forEach((button) =>
-        button.addEventListener('click', () => this.hooks.onTurnInQuest(String(button.dataset.turnin)), { once: true }),
-      );
-    el('quest-board')
-      .querySelectorAll<HTMLElement>('[data-accept]')
-      .forEach((button) =>
-        button.addEventListener('click', () => this.hooks.onAcceptQuest(String(button.dataset.accept)), { once: true }),
-      );
   }
 }
