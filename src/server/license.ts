@@ -5,7 +5,8 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
  * scripts/genkeys.mjs after a sale and verified here without any database.
  * The paywall is disabled entirely when LICENSE_SECRET is unset (free/dev mode).
  */
-const SECRET = process.env.LICENSE_SECRET ?? '';
+const SECRET = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env
+  ?.LICENSE_SECRET ?? '';
 
 export const paywallEnabled = SECRET.length > 0;
 
