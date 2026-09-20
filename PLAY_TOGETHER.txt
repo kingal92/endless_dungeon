@@ -1,0 +1,17 @@
+Endless Dungeon - Quick Start
+
+1. Install Node.js 20+
+2. Open a terminal in this folder
+3. Run: npm install
+4. Run: npm run build
+5. Run: npm start
+6. Open http://localhost:8080 in two browser tabs/windows
+7. One player creates a dungeon and shares the 4-character room code
+8. The second player joins with that code and presses Ready up
+
+Optional: run dev mode with rebuild-on-save:
+  npm run dev
+
+Notes:
+- The server is authoritative and the game is designed for two players on the same local network or same machine.
+- You can host this on a server too, but for local co-op just run it on one machine and open two browser windows.
