@@ -3,12 +3,14 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 /**
  * Offline-verifiable purchase keys: `EDG-<serial>-<signature>`. Keys are minted with
  * scripts/genkeys.mjs after a sale and verified here without any database.
- * The paywall is disabled entirely when LICENSE_SECRET is unset (free/dev mode).
+ * The paywall is enabled only in explicit production deployments, so local dev keeps running
+ * even when a LICENSE_SECRET is present in the shell environment.
  */
-const SECRET = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env
-  ?.LICENSE_SECRET ?? '';
+const processEnv = (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ?? {};
+const isProduction = (processEnv.NODE_ENV ?? '').toLowerCase() === 'production';
+const SECRET = isProduction ? (processEnv.LICENSE_SECRET ?? '') : '';
 
-export const paywallEnabled = SECRET.length > 0;
+export const paywallEnabled = isProduction && SECRET.length > 0;
 
 export function signSerial(serial: string, secret: string = SECRET): string {
   return createHmac('sha256', secret).update(serial).digest('hex').slice(0, 12).toUpperCase();
