@@ -58,6 +58,478 @@ export class Renderer {
     this.tileCanvas = canvas;
   }
 
+  private drawHeroSprite(player: Snapshot['players'][number], color: string): void {
+    const { ctx } = this;
+    const isWarrior = player.cls === 'warrior';
+    const weapon = player.equipment.weapon;
+    const armor = player.equipment.armor;
+    const trinket = player.equipment.trinket;
+    const gearColor = (item: typeof weapon): string => (item ? RARITY_COLOR[item.rarity] : color);
+    const outline = '#171522';
+    const shadow = 'rgba(0,0,0,0.45)';
+    const skin = player.alive ? '#f2b48b' : '#8c7e7b';
+    const cloth = player.alive ? (isWarrior ? '#30456f' : '#285b55') : '#3a3b48';
+    const lightCloth = player.alive ? (isWarrior ? '#5274aa' : '#4a9980') : '#555663';
+
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.rotate(player.facing);
+    ctx.globalAlpha = player.alive ? 1 : 0.55;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    // Ground shadow makes the sprite read clearly against the dungeon tiles.
+    ctx.fillStyle = shadow;
+    ctx.beginPath();
+    ctx.ellipse(0, 11, 13, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (isWarrior) {
+      // Shield and shoulder cape.
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.moveTo(-13, -2);
+      ctx.lineTo(-17, 2);
+      ctx.lineTo(-13, 10);
+      ctx.lineTo(-7, 7);
+      ctx.lineTo(-7, -1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#a9c8d7';
+      ctx.beginPath();
+      ctx.moveTo(-12, 0);
+      ctx.lineTo(-15, 3);
+      ctx.lineTo(-12, 7);
+      ctx.lineTo(-9, 5);
+      ctx.lineTo(-9, 1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#4c7894';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    } else {
+      // Ranger's hood and trailing cloak.
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.moveTo(-10, -7);
+      ctx.lineTo(-17, 5);
+      ctx.lineTo(-11, 11);
+      ctx.lineTo(-4, 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = cloth;
+      ctx.beginPath();
+      ctx.moveTo(-9, -5);
+      ctx.lineTo(-14, 4);
+      ctx.lineTo(-10, 8);
+      ctx.lineTo(-5, 4);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Body, belt, and boots.
+    ctx.fillStyle = outline;
+    ctx.beginPath();
+    ctx.roundRect(-9, -4, 18, 17, 4);
+    ctx.fill();
+    ctx.fillStyle = cloth;
+    ctx.fillRect(-7, -3, 14, 13);
+    ctx.fillStyle = lightCloth;
+    ctx.fillRect(-6, 0, 12, 4);
+    ctx.fillStyle = '#4b3340';
+    ctx.fillRect(-7, 7, 14, 3);
+    ctx.fillStyle = '#211d2c';
+    ctx.fillRect(-7, 10, 5, 4);
+    ctx.fillRect(2, 10, 5, 4);
+
+    if (armor) {
+      // Armor replaces the plain tunic with a visible chestplate and shoulder guards.
+      const armorColor = gearColor(armor);
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.roundRect(-10, -5, 20, 18, 5);
+      ctx.fill();
+      ctx.fillStyle = armorColor;
+      ctx.beginPath();
+      ctx.roundRect(-8, -3, 16, 14, 3);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.32)';
+      ctx.fillRect(-6, -1, 12, 2);
+      ctx.fillStyle = '#2c263a';
+      ctx.fillRect(-1, -2, 2, 11);
+      ctx.fillStyle = '#c9d5df';
+      ctx.beginPath();
+      ctx.arc(0, 5, 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = armorColor;
+      ctx.beginPath();
+      ctx.moveTo(-9, -3);
+      ctx.lineTo(-14, 1);
+      ctx.lineTo(-11, 7);
+      ctx.lineTo(-7, 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(9, -3);
+      ctx.lineTo(14, 1);
+      ctx.lineTo(11, 7);
+      ctx.lineTo(7, 5);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Head and hair/hood.
+    ctx.fillStyle = outline;
+    ctx.beginPath();
+    ctx.arc(0, -8, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = skin;
+    ctx.beginPath();
+    ctx.arc(1, -8, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = isWarrior ? '#d08b42' : '#37283f';
+    ctx.beginPath();
+    ctx.arc(-1, -11, 7, Math.PI, Math.PI * 2);
+    ctx.lineTo(6, -8);
+    ctx.lineTo(-6, -8);
+    ctx.closePath();
+    ctx.fill();
+    if (!isWarrior) {
+      ctx.fillStyle = '#514064';
+      ctx.fillRect(-7, -10, 4, 7);
+    }
+    ctx.fillStyle = '#241d2a';
+    ctx.fillRect(3, -8, 2, 2);
+
+    // Equipped weapons replace the class starter weapon and use their rarity color.
+    ctx.strokeStyle = outline;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    if (weapon) {
+      const weaponColor = gearColor(weapon);
+      ctx.strokeStyle = weaponColor;
+      ctx.lineWidth = 3;
+      if (isWarrior) {
+        ctx.moveTo(4, 2);
+        ctx.lineTo(20, -14);
+        ctx.stroke();
+        ctx.strokeStyle = '#fff4d1';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(11, -6);
+        ctx.lineTo(21, -16);
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = '#9a704b';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(6, 1, 12, -1.15, 1.15);
+        ctx.stroke();
+        ctx.strokeStyle = weaponColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(6, -10);
+        ctx.lineTo(6, 11);
+        ctx.stroke();
+        ctx.fillStyle = weaponColor;
+        ctx.beginPath();
+        ctx.arc(6, -10, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (isWarrior) {
+      ctx.moveTo(5, 2);
+      ctx.lineTo(16, -9);
+      ctx.stroke();
+      ctx.strokeStyle = '#dfe8f2';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(11, -5);
+      ctx.lineTo(20, -14);
+      ctx.stroke();
+      ctx.strokeStyle = '#d49b4b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(4, 2);
+      ctx.lineTo(9, -3);
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = '#a77a4c';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(6, 1, 11, -1.15, 1.15);
+      ctx.stroke();
+      ctx.strokeStyle = '#dce8d5';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(6, -9);
+      ctx.lineTo(6, 11);
+      ctx.stroke();
+    }
+
+    if (trinket) {
+      // Trinkets hang beside the chest so they remain visible without obscuring gear.
+      const trinketColor = gearColor(trinket);
+      ctx.strokeStyle = trinketColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(-10, 5, 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = trinketColor;
+      ctx.beginPath();
+      ctx.moveTo(-10, 2);
+      ctx.lineTo(-7, 6);
+      ctx.lineTo(-10, 10);
+      ctx.lineTo(-13, 6);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Class gem gives each hero a strong focal point at game scale.
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, 1);
+    ctx.lineTo(3, 4);
+    ctx.lineTo(0, 7);
+    ctx.lineTo(-3, 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  private drawEnemySprite(enemy: Snapshot['enemies'][number]): void {
+    const { ctx } = this;
+    const base = enemy.boss ? 26 : 16;
+    const scale = enemy.radius / base;
+    const color = enemy.boss ? '#b8324b' : ENEMY_COLOR[enemy.kind] ?? '#cccccc';
+    const outline = '#17131f';
+    const pale = enemy.kind === 'skeleton' || enemy.kind === 'bone-tyrant' ? '#e8e0c9' : '#ffffff';
+
+    ctx.save();
+    ctx.translate(enemy.x, enemy.y);
+    ctx.scale(scale, scale);
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.beginPath();
+    ctx.ellipse(0, base * 0.65, base * 0.7, base * 0.26, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (enemy.boss) {
+      // Bosses share a heavy silhouette, with a distinct crown/core for each name.
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.arc(0, 0, base, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, 1, base * 0.82, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#681d35';
+      ctx.fillRect(-base * 0.58, base * 0.2, base * 1.16, base * 0.33);
+
+      if (enemy.kind === 'bone-tyrant') {
+        ctx.fillStyle = pale;
+        ctx.beginPath();
+        ctx.moveTo(-18, -12);
+        ctx.lineTo(-11, -27);
+        ctx.lineTo(-3, -16);
+        ctx.lineTo(4, -28);
+        ctx.lineTo(12, -15);
+        ctx.lineTo(20, -21);
+        ctx.lineTo(18, 2);
+        ctx.lineTo(-18, 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#8f293e';
+        ctx.fillRect(-12, -8, 7, 5);
+        ctx.fillRect(5, -8, 7, 5);
+      } else if (enemy.kind === 'plague-maw') {
+        ctx.fillStyle = '#4eaa5c';
+        ctx.beginPath();
+        ctx.arc(0, -3, 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#1e2a22';
+        ctx.beginPath();
+        ctx.ellipse(0, 6, 14, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#d8d39b';
+        for (let tooth = -9; tooth <= 9; tooth += 6) {
+          ctx.beginPath();
+          ctx.moveTo(tooth - 2, 3);
+          ctx.lineTo(tooth, 10);
+          ctx.lineTo(tooth + 2, 3);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.fillStyle = '#b8f06d';
+        ctx.beginPath();
+        ctx.arc(-7, -7, 3, 0, Math.PI * 2);
+        ctx.arc(7, -7, 3, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#171b35';
+        ctx.beginPath();
+        ctx.moveTo(0, -23);
+        ctx.lineTo(17, -8);
+        ctx.lineTo(13, 17);
+        ctx.lineTo(0, 25);
+        ctx.lineTo(-13, 17);
+        ctx.lineTo(-17, -8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#8799ff';
+        ctx.beginPath();
+        ctx.moveTo(0, -12);
+        ctx.lineTo(8, 0);
+        ctx.lineTo(0, 13);
+        ctx.lineTo(-8, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#d4ddff';
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (enemy.kind === 'slime') {
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.arc(0, 2, 15, Math.PI, 0);
+      ctx.lineTo(13, 11);
+      ctx.quadraticCurveTo(0, 18, -13, 11);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, 1, 12, Math.PI, 0);
+      ctx.lineTo(10, 10);
+      ctx.quadraticCurveTo(0, 15, -10, 10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#163d2c';
+      ctx.fillRect(-6, 0, 3, 4);
+      ctx.fillRect(3, 0, 3, 4);
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.beginPath();
+      ctx.arc(-5, -6, 3, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (enemy.kind === 'skeleton') {
+      ctx.strokeStyle = outline;
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, 15);
+      ctx.moveTo(-9, 6);
+      ctx.lineTo(9, 6);
+      ctx.moveTo(-6, 14);
+      ctx.lineTo(-10, 20);
+      ctx.moveTo(6, 14);
+      ctx.lineTo(10, 20);
+      ctx.stroke();
+      ctx.strokeStyle = pale;
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.arc(0, -8, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = pale;
+      ctx.beginPath();
+      ctx.arc(0, -8, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#4b3340';
+      ctx.fillRect(-4, -10, 3, 3);
+      ctx.fillRect(2, -10, 3, 3);
+    } else if (enemy.kind === 'cultist') {
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.moveTo(0, -15);
+      ctx.lineTo(14, 15);
+      ctx.lineTo(-14, 15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(0, -12);
+      ctx.lineTo(11, 13);
+      ctx.lineTo(-11, 13);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#e9b7ff';
+      ctx.beginPath();
+      ctx.arc(0, -7, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#231b31';
+      ctx.fillRect(-3, -8, 2, 2);
+      ctx.fillRect(2, -8, 2, 2);
+      ctx.strokeStyle = '#e6c978';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(12, 11);
+      ctx.lineTo(15, -18);
+      ctx.stroke();
+      ctx.fillStyle = '#f4d981';
+      ctx.beginPath();
+      ctx.arc(15, -20, 4, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (enemy.kind === 'brute') {
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.moveTo(-15, -8);
+      ctx.lineTo(-23, -19);
+      ctx.lineTo(-11, -15);
+      ctx.lineTo(0, -20);
+      ctx.lineTo(11, -15);
+      ctx.lineTo(23, -19);
+      ctx.lineTo(15, -8);
+      ctx.lineTo(17, 15);
+      ctx.lineTo(-17, 15);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, 1, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffb267';
+      ctx.fillRect(-9, -3, 5, 4);
+      ctx.fillRect(4, -3, 5, 4);
+      ctx.fillStyle = '#512a2d';
+      ctx.fillRect(-8, 7, 16, 4);
+    } else {
+      // Wraith: tapered cloak and bright spectral eyes.
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.moveTo(0, -16);
+      ctx.quadraticCurveTo(15, -9, 13, 8);
+      ctx.lineTo(18, 16);
+      ctx.lineTo(8, 13);
+      ctx.lineTo(0, 18);
+      ctx.lineTo(-8, 13);
+      ctx.lineTo(-18, 16);
+      ctx.lineTo(-13, 8);
+      ctx.quadraticCurveTo(-15, -9, 0, -16);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(0, -13);
+      ctx.quadraticCurveTo(12, -7, 10, 8);
+      ctx.lineTo(14, 12);
+      ctx.lineTo(6, 10);
+      ctx.lineTo(0, 14);
+      ctx.lineTo(-6, 10);
+      ctx.lineTo(-14, 12);
+      ctx.lineTo(-10, 8);
+      ctx.quadraticCurveTo(-12, -7, 0, -13);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#e5ffff';
+      ctx.fillRect(-7, -3, 5, 3);
+      ctx.fillRect(2, -3, 5, 3);
+    }
+    ctx.restore();
+  }
+
   draw(snapshot: Snapshot, selfId: string): void {
     if (snapshot.tiles.length > 0) this.tiles = snapshot.tiles;
     if (snapshot.floorKey !== this.floorKey && this.tiles.length > 0) {
@@ -107,10 +579,7 @@ export class Renderer {
     }
 
     for (const enemy of snapshot.enemies) {
-      ctx.fillStyle = enemy.boss ? '#ff5d5d' : ENEMY_COLOR[enemy.kind] ?? '#cccccc';
-      ctx.beginPath();
-      ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
-      ctx.fill();
+      this.drawEnemySprite(enemy);
       if (enemy.telegraph > 0) {
         ctx.strokeStyle = 'rgba(255,255,255,0.85)';
         ctx.lineWidth = 2;
@@ -134,18 +603,12 @@ export class Renderer {
 
     for (const player of snapshot.players) {
       const color = CLASS_COLOR[player.cls] ?? '#ffffff';
+      this.drawHeroSprite(player, color);
       ctx.globalAlpha = player.alive ? 1 : 0.4;
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, 12, 0, Math.PI * 2);
-      ctx.fill();
       ctx.strokeStyle = player.id === selfId ? '#ffffff' : 'rgba(255,255,255,0.35)';
       ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.strokeStyle = color;
       ctx.beginPath();
-      ctx.moveTo(player.x, player.y);
-      ctx.lineTo(player.x + Math.cos(player.facing) * 20, player.y + Math.sin(player.facing) * 20);
+      ctx.arc(player.x, player.y, 17, 0, Math.PI * 2);
       ctx.stroke();
       ctx.globalAlpha = 1;
 
