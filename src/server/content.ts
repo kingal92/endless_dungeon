@@ -20,17 +20,24 @@ export const ENEMIES: readonly EnemyArchetype[] = [
   { kind: 'cultist', hp: 28, power: 7, speed: 50, radius: 12, ranged: true, xp: 14, boss: false, attackCooldown: 1.8 },
   { kind: 'brute', hp: 62, power: 12, speed: 46, radius: 17, ranged: false, xp: 22, boss: false, attackCooldown: 1.4 },
   { kind: 'wraith', hp: 40, power: 10, speed: 78, radius: 13, ranged: true, xp: 20, boss: false, attackCooldown: 1.5 },
+  { kind: 'spider', hp: 30, power: 9, speed: 92, radius: 12, ranged: false, xp: 18, boss: false, attackCooldown: 0.75 },
+  { kind: 'golem', hp: 86, power: 15, speed: 30, radius: 19, ranged: false, xp: 30, boss: false, attackCooldown: 1.8 },
+  { kind: 'imp', hp: 24, power: 11, speed: 68, radius: 11, ranged: true, xp: 24, boss: false, attackCooldown: 1.25 },
 ];
 
 export const BOSSES: readonly EnemyArchetype[] = [
   { kind: 'bone-tyrant', hp: 420, power: 18, speed: 54, radius: 26, ranged: false, xp: 220, boss: true, attackCooldown: 1.2 },
   { kind: 'plague-maw', hp: 500, power: 16, speed: 44, radius: 28, ranged: true, xp: 260, boss: true, attackCooldown: 1.0 },
   { kind: 'void-warden', hp: 460, power: 21, speed: 62, radius: 25, ranged: true, xp: 300, boss: true, attackCooldown: 0.85 },
+  { kind: 'crystal-colossus', hp: 620, power: 24, speed: 34, radius: 32, ranged: false, xp: 380, boss: true, attackCooldown: 1.5 },
+  { kind: 'ember-dragon', hp: 560, power: 22, speed: 72, radius: 29, ranged: true, xp: 420, boss: true, attackCooldown: 0.8 },
+  { kind: 'dread-queen', hp: 540, power: 20, speed: 58, radius: 27, ranged: true, xp: 400, boss: true, attackCooldown: 0.7 },
 ];
 
 export const CLASS_BASE: Record<ClassId, Stats & { ranged: boolean; attackCooldown: number }> = {
   warrior: { power: 12, armor: 6, maxHp: 130, speed: 138, crit: 0.05, ranged: false, attackCooldown: 0.45 },
   ranger: { power: 10, armor: 3, maxHp: 100, speed: 158, crit: 0.12, ranged: true, attackCooldown: 0.38 },
+  mage: { power: 14, armor: 2, maxHp: 90, speed: 128, crit: 0.08, ranged: true, attackCooldown: 0.55 },
 };
 
 const RARITY_WEIGHTS: ReadonlyArray<[Rarity, number]> = [

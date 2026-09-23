@@ -7,7 +7,14 @@ export const TICK_HZ = 30;
 export const SNAPSHOT_HZ = 15;
 export const MAX_PLAYERS = 2;
 
-export type ClassId = 'warrior' | 'ranger';
+export type ClassId = 'warrior' | 'ranger' | 'mage';
+export type HeroPath =
+  | 'juggernaut'
+  | 'berserker'
+  | 'sharpshooter'
+  | 'trickster'
+  | 'arcanist'
+  | 'elementalist';
 export type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 export type Slot = 'weapon' | 'armor' | 'trinket';
 export type QuestKind = 'slay' | 'loot' | 'descend' | 'boss';
@@ -47,6 +54,8 @@ export interface PlayerView {
   id: string;
   name: string;
   cls: ClassId;
+  path: HeroPath | null;
+  pendingPath: boolean;
   x: number;
   y: number;
   facing: number;
@@ -60,6 +69,8 @@ export interface PlayerView {
   reviveProgress: number;
   attackCooldown: number;
   dashCooldown: number;
+  skill1Cooldown: number;
+  skill2Cooldown: number;
   potions: number;
   stats: Stats;
   equipment: Partial<Record<Slot, Item>>;
@@ -134,6 +145,8 @@ export interface InputState {
   aimY: number;
   attack: boolean;
   dash: boolean;
+  skill1: boolean;
+  skill2: boolean;
 }
 
 export type ClientMessage =
@@ -147,7 +160,8 @@ export type ClientMessage =
   | { type: 'acceptQuest'; questId: string }
   | { type: 'turnInQuest'; questId: string }
   | { type: 'descend' }
-  | { type: 'restart' };
+  | { type: 'restart' }
+  | { type: 'choosePath'; path: HeroPath };
 
 export type ServerMessage =
   | { type: 'joined'; code: string; playerId: string }

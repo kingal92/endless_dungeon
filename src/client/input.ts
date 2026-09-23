@@ -18,6 +18,8 @@ export class InputController {
   private stickPointer: number | null = null;
   private touchAttack = false;
   private touchDash = false;
+  private touchSkill1 = false;
+  private touchSkill2 = false;
 
   constructor(canvas: HTMLCanvasElement, hooks: InputHooks) {
     window.addEventListener('keydown', (event) => {
@@ -28,7 +30,7 @@ export class InputController {
       if (key === 'e') hooks.onDescend();
       if (key === 'i') hooks.onToggleGear();
       if (key === 'j') hooks.onToggleQuests();
-      if ([' ', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) event.preventDefault();
+      if ([' ', 'z', 'x', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) event.preventDefault();
     });
     window.addEventListener('keyup', (event) => this.keys.delete(event.key.toLowerCase()));
     window.addEventListener('blur', () => this.keys.clear());
@@ -81,6 +83,12 @@ export class InputController {
     this.bindHold('btn-dash', (held) => {
       this.touchDash = held;
     });
+    this.bindHold('btn-skill1', (held) => {
+      this.touchSkill1 = held;
+    });
+    this.bindHold('btn-skill2', (held) => {
+      this.touchSkill2 = held;
+    });
     document.getElementById('btn-potion')?.addEventListener('click', hooks.onPotion);
   }
 
@@ -118,6 +126,8 @@ export class InputController {
       aimY: aim.y,
       attack: this.touchAttack || this.mouseDown || this.keys.has(' '),
       dash: this.touchDash || this.keys.has('shift'),
+      skill1: this.touchSkill1 || this.keys.has('z'),
+      skill2: this.touchSkill2 || this.keys.has('x'),
     };
   }
 

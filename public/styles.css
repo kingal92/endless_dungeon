@@ -93,6 +93,12 @@ input {
   max-width: calc(100vw - 16px);
 }
 
+#skill-info {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
 .topbar-buttons {
   display: flex;
   gap: 6px;
@@ -157,6 +163,41 @@ input {
   font-weight: bold;
   text-shadow: 0 3px 14px #000;
   pointer-events: auto;
+}
+
+.path-choice {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(520px, 92vw);
+  padding: 14px;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  pointer-events: auto;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+.path-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.path-options button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  color: var(--accent);
+}
+
+.path-options span {
+  color: var(--muted);
+  font-size: 11px;
 }
 
 #banner button {
@@ -257,7 +298,7 @@ input {
 
 .class-picker {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
 }
 
@@ -275,8 +316,10 @@ input {
 }
 
 .class-option.selected {
-  border-color: var(--accent);
-  background: #26200f;
+  border: 2px solid var(--accent);
+  background: #403016;
+  box-shadow: 0 0 0 2px rgba(255, 171, 36, 0.24), inset 0 0 18px rgba(255, 171, 36, 0.12);
+  transform: translateY(-1px);
 }
 
 .join-row {
@@ -369,6 +412,12 @@ input {
   width: 96px;
   height: 96px;
   font-size: 14px;
+}
+
+.round.skill {
+  border-color: #8269c7;
+  background: #282044;
+  color: #e4d8ff;
 }
 
 @media (max-width: 720px) {

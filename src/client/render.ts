@@ -1,12 +1,18 @@
 import { MAP_W, RARITY_COLOR, Snapshot, TILE } from '../shared/protocol.js';
 
-const CLASS_COLOR: Record<string, string> = { warrior: '#ffcf6b', ranger: '#7ee0c0' };
+const CLASS_COLOR: Record<string, string> = { warrior: '#ffcf6b', ranger: '#7ee0c0', mage: '#b68cff' };
 const ENEMY_COLOR: Record<string, string> = {
   slime: '#66d17a',
   skeleton: '#dfe3ec',
   cultist: '#c07bf0',
   brute: '#e2794a',
   wraith: '#7fa8ff',
+  spider: '#d45b9d',
+  golem: '#a78f7c',
+  imp: '#ff875c',
+  'crystal-colossus': '#8c63d1',
+  'ember-dragon': '#e64d32',
+  'dread-queen': '#a654c7',
 };
 
 export interface Camera {
@@ -61,6 +67,7 @@ export class Renderer {
   private drawHeroSprite(player: Snapshot['players'][number], color: string): void {
     const { ctx } = this;
     const isWarrior = player.cls === 'warrior';
+    const isMage = player.cls === 'mage';
     const weapon = player.equipment.weapon;
     const armor = player.equipment.armor;
     const trinket = player.equipment.trinket;
@@ -68,8 +75,8 @@ export class Renderer {
     const outline = '#171522';
     const shadow = 'rgba(0,0,0,0.45)';
     const skin = player.alive ? '#f2b48b' : '#8c7e7b';
-    const cloth = player.alive ? (isWarrior ? '#30456f' : '#285b55') : '#3a3b48';
-    const lightCloth = player.alive ? (isWarrior ? '#5274aa' : '#4a9980') : '#555663';
+    const cloth = player.alive ? (isWarrior ? '#30456f' : isMage ? '#47316f' : '#285b55') : '#3a3b48';
+    const lightCloth = player.alive ? (isWarrior ? '#5274aa' : isMage ? '#815dc0' : '#4a9980') : '#555663';
 
     ctx.save();
     ctx.translate(player.x, player.y);
@@ -107,6 +114,29 @@ export class Renderer {
       ctx.strokeStyle = '#4c7894';
       ctx.lineWidth = 1;
       ctx.stroke();
+    } else if (isMage) {
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.moveTo(0, -18);
+      ctx.lineTo(14, 7);
+      ctx.lineTo(10, 12);
+      ctx.lineTo(-10, 12);
+      ctx.lineTo(-14, 7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = cloth;
+      ctx.beginPath();
+      ctx.moveTo(0, -15);
+      ctx.lineTo(11, 7);
+      ctx.lineTo(7, 9);
+      ctx.lineTo(-7, 9);
+      ctx.lineTo(-11, 7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#d7c5ff';
+      ctx.beginPath();
+      ctx.arc(0, -8, 6, 0, Math.PI * 2);
+      ctx.fill();
     } else {
       // Ranger's hood and trailing cloak.
       ctx.fillStyle = outline;
@@ -219,6 +249,21 @@ export class Renderer {
         ctx.moveTo(11, -6);
         ctx.lineTo(21, -16);
         ctx.stroke();
+      } else if (isMage) {
+        ctx.strokeStyle = '#8d6ab2';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(7, 10);
+        ctx.lineTo(13, -17);
+        ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(13, -19, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#f0dcff';
+        ctx.beginPath();
+        ctx.arc(13, -19, 2, 0, Math.PI * 2);
+        ctx.fill();
       } else {
         ctx.strokeStyle = '#9a704b';
         ctx.lineWidth = 2;
@@ -300,7 +345,7 @@ export class Renderer {
     const { ctx } = this;
     const base = enemy.boss ? 26 : 16;
     const scale = enemy.radius / base;
-    const color = enemy.boss ? '#b8324b' : ENEMY_COLOR[enemy.kind] ?? '#cccccc';
+    const color = ENEMY_COLOR[enemy.kind] ?? (enemy.boss ? '#b8324b' : '#cccccc');
     const outline = '#17131f';
     const pale = enemy.kind === 'skeleton' || enemy.kind === 'bone-tyrant' ? '#e8e0c9' : '#ffffff';
 
@@ -495,6 +540,59 @@ export class Renderer {
       ctx.fillRect(4, -3, 5, 4);
       ctx.fillStyle = '#512a2d';
       ctx.fillRect(-8, 7, 16, 4);
+    } else if (enemy.kind === 'spider') {
+      ctx.strokeStyle = outline;
+      ctx.lineWidth = 4;
+      for (const side of [-1, 1]) {
+        for (let leg = 0; leg < 4; leg++) {
+          ctx.beginPath();
+          ctx.moveTo(side * 6, leg * 4 - 6);
+          ctx.lineTo(side * (17 + leg * 2), leg * 5 - 13);
+          ctx.stroke();
+        }
+      }
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.arc(0, 2, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, 1, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffe5f5';
+      ctx.fillRect(-6, -3, 3, 3);
+      ctx.fillRect(3, -3, 3, 3);
+    } else if (enemy.kind === 'golem') {
+      ctx.fillStyle = outline;
+      ctx.fillRect(-16, -16, 32, 31);
+      ctx.fillStyle = color;
+      ctx.fillRect(-13, -13, 26, 25);
+      ctx.fillStyle = '#e2b58a';
+      ctx.fillRect(-10, -4, 6, 5);
+      ctx.fillRect(4, -4, 6, 5);
+      ctx.fillStyle = '#594b49';
+      ctx.fillRect(-13, 6, 26, 5);
+    } else if (enemy.kind === 'imp') {
+      ctx.fillStyle = outline;
+      ctx.beginPath();
+      ctx.moveTo(-13, -6);
+      ctx.lineTo(-20, -20);
+      ctx.lineTo(-7, -13);
+      ctx.lineTo(0, -17);
+      ctx.lineTo(7, -13);
+      ctx.lineTo(20, -20);
+      ctx.lineTo(13, -6);
+      ctx.lineTo(12, 13);
+      ctx.lineTo(-12, 13);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(0, 1, 11, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff0a8';
+      ctx.fillRect(-6, -3, 4, 3);
+      ctx.fillRect(2, -3, 4, 3);
     } else {
       // Wraith: tapered cloak and bright spectral eyes.
       ctx.fillStyle = outline;

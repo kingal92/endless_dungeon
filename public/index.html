@@ -19,6 +19,7 @@
       <div id="topbar">
         <div id="floor-info"></div>
         <div id="room-info"></div>
+        <div id="skill-info"></div>
         <div class="topbar-buttons">
           <button id="btn-gear" type="button">Gear</button>
           <button id="btn-quests" type="button">Quests</button>
@@ -26,13 +27,20 @@
       </div>
       <div id="party"></div>
       <div id="log"></div>
-      <div id="banner" class="hidden"></div>
+      <div id="banner" class="hidden">
+        <div id="banner-message"></div>
+        <button id="btn-restart" class="hidden" type="button">Restart run</button>
+        <button id="btn-descend" class="hidden" type="button">Descend (E)</button>
+      </div>
+      <div id="path-choice" class="path-choice hidden"></div>
 
       <div id="touch" class="hidden">
         <div id="stick-move" class="stick"><div class="knob"></div></div>
         <div id="touch-actions">
           <button id="btn-potion" class="round" type="button">Potion</button>
           <button id="btn-dash" class="round" type="button">Dash</button>
+          <button id="btn-skill1" class="round skill" type="button">Skill 1</button>
+          <button id="btn-skill2" class="round skill" type="button">Skill 2</button>
           <button id="btn-attack" class="round primary" type="button">Attack</button>
         </div>
       </div>
@@ -59,12 +67,15 @@
         <p class="tagline">Two-player online co-op. Endless floors, real loot, angry bosses.</p>
         <label>Hero name <input id="input-name" maxlength="14" placeholder="Hero" /></label>
         <label id="key-row" class="hidden">Purchase key <input id="input-key" placeholder="EDG-XXXXXXXXXX-XXXXXXXXXXXX" /></label>
-        <div class="class-picker">
-          <button class="class-option selected" data-class="warrior" type="button">
+        <div id="class-picker" class="class-picker">
+          <button class="class-option selected" data-class="warrior" aria-pressed="true" type="button">
             <strong>Warrior</strong><span>Melee cleave · tanky · 130 HP</span>
           </button>
-          <button class="class-option" data-class="ranger" type="button">
+          <button class="class-option" data-class="ranger" aria-pressed="false" type="button">
             <strong>Ranger</strong><span>Ranged shots · fast · high crit</span>
+          </button>
+          <button class="class-option" data-class="mage" aria-pressed="false" type="button">
+            <strong>Mage</strong><span>Area spells · powerful · fragile</span>
           </button>
         </div>
         <button id="btn-create" class="primary" type="button">Create dungeon</button>
@@ -74,7 +85,7 @@
         </div>
         <p id="menu-error" class="error"></p>
         <p class="hint">
-          PC: WASD/arrows to move · mouse to aim · click or Space to attack · Shift to dash · Q potion · E descend ·
+          PC: WASD/arrows to move · mouse to aim · click or Space to attack · Z/X skills · Shift to dash · Q potion · E descend ·
           I gear · J quests<br />
           Mobile: left stick to move, buttons to attack/dash/heal
         </p>

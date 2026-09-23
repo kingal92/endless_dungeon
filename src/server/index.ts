@@ -48,7 +48,7 @@ const app = express();
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.resolve(dirname, '../../public');
 
-app.use(express.static(publicDir, { maxAge: '1h', index: 'index.html' }));
+app.use(express.static(publicDir, { maxAge: 0, index: 'index.html' }));
 app.get('/healthz', (_req, res) => {
   res.json({ ok: true, rooms: rooms.size });
 });
@@ -76,7 +76,7 @@ wss.on('connection', (socket) => {
           send(socket, { type: 'error', message: 'Invalid or missing purchase key.' });
           return;
         }
-        const cls = message.cls === 'ranger' ? 'ranger' : 'warrior';
+        const cls = message.cls === 'ranger' || message.cls === 'mage' ? message.cls : 'warrior';
         const name = sanitizeName(message.name);
         let room: Room | undefined;
 
@@ -138,6 +138,9 @@ wss.on('connection', (socket) => {
         break;
       case 'restart':
         game.restart();
+        break;
+      case 'choosePath':
+        game.choosePath(id, message.path);
         break;
       default:
         break;

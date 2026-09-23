@@ -3,6 +3,7 @@ import {
   DropView,
   EnemyView,
   FxView,
+  HeroPath,
   InputState,
   Item,
   MAP_H,
@@ -28,10 +29,17 @@ const INVENTORY_SIZE = 18;
 const MAX_ACTIVE_QUESTS = 3;
 const BOSS_EVERY = 5;
 
+function cardinalFacing(x: number, y: number): number {
+  if (Math.abs(x) >= Math.abs(y)) return x >= 0 ? 0 : Math.PI;
+  return y >= 0 ? Math.PI / 2 : -Math.PI / 2;
+}
+
 interface Player {
   id: string;
   name: string;
   cls: ClassId;
+  path: HeroPath | null;
+  pendingPath: boolean;
   x: number;
   y: number;
   facing: number;
@@ -44,6 +52,8 @@ interface Player {
   reviveProgress: number;
   attackCooldown: number;
   dashCooldown: number;
+  skill1Cooldown: number;
+  skill2Cooldown: number;
   dashTimer: number;
   hurtCooldown: number;
   equipment: Partial<Record<Slot, Item>>;
@@ -144,6 +154,8 @@ export class Game {
       id,
       name,
       cls,
+      path: null,
+      pendingPath: false,
       x: this.dungeon.spawn.x,
       y: this.dungeon.spawn.y,
       facing: 0,
@@ -156,12 +168,14 @@ export class Game {
       reviveProgress: 0,
       attackCooldown: 0,
       dashCooldown: 0,
+      skill1Cooldown: 0,
+      skill2Cooldown: 0,
       dashTimer: 0,
       hurtCooldown: 0,
       equipment: {},
       inventory: [],
       quests: [],
-      input: { mx: 0, my: 0, aimX: 1, aimY: 0, attack: false, dash: false },
+      input: { mx: 0, my: 0, aimX: 1, aimY: 0, attack: false, dash: false, skill1: false, skill2: false },
       ready: false,
       connected: true,
     });
@@ -188,6 +202,8 @@ export class Game {
       aimY: input.aimY,
       attack: input.attack,
       dash: input.dash,
+      skill1: input.skill1,
+      skill2: input.skill2,
     };
   }
 
@@ -213,6 +229,22 @@ export class Game {
     if (previous) player.inventory.push(previous);
     player.hp = Math.min(player.hp, this.statsOf(player).maxHp);
     this.pushLog(`${player.name} equips ${item.name}.`);
+  }
+
+  choosePath(id: string, path: HeroPath): void {
+    const player = this.players.get(id);
+    if (!player || !player.pendingPath) return;
+    const valid =
+      player.cls === 'warrior'
+        ? path === 'juggernaut' || path === 'berserker'
+        : player.cls === 'ranger'
+          ? path === 'sharpshooter' || path === 'trickster'
+          : path === 'arcanist' || path === 'elementalist';
+    if (!valid) return;
+    player.path = path;
+    player.pendingPath = false;
+    player.hp = this.statsOf(player).maxHp;
+    this.pushLog(`${player.name} chose the ${path} path!`);
   }
 
   sell(id: string, itemId: string): void {
@@ -272,6 +304,8 @@ export class Game {
     for (const player of this.players.values()) {
       player.level = 1;
       player.xp = 0;
+      player.path = null;
+      player.pendingPath = false;
       player.gold = Math.floor(player.gold / 2);
       player.inventory = [];
       player.equipment = {};
@@ -372,6 +406,12 @@ export class Game {
       speed: base.speed + levelBonus * 1.5,
       crit: base.crit + levelBonus * 0.004,
     };
+    if (player.path === 'juggernaut') stats.maxHp += 30;
+    if (player.path === 'berserker') stats.power += 6;
+    if (player.path === 'sharpshooter') stats.power += 5;
+    if (player.path === 'trickster') stats.speed += 24;
+    if (player.path === 'arcanist') stats.power += 7;
+    if (player.path === 'elementalist') stats.maxHp += 18;
     for (const item of Object.values(player.equipment)) {
       if (!item) continue;
       stats.power += item.stats.power ?? 0;
@@ -388,6 +428,7 @@ export class Game {
     while (player.xp >= xpForLevel(player.level)) {
       player.xp -= xpForLevel(player.level);
       player.level += 1;
+      if (!player.path) player.pendingPath = true;
       player.hp = this.statsOf(player).maxHp;
       this.spawnFx('levelup', player.x, player.y, 0);
       this.pushLog(`${player.name} reached level ${player.level}!`);
@@ -467,6 +508,8 @@ export class Game {
     const stats = this.statsOf(player);
     player.attackCooldown = Math.max(0, player.attackCooldown - dt);
     player.dashCooldown = Math.max(0, player.dashCooldown - dt);
+    player.skill1Cooldown = Math.max(0, player.skill1Cooldown - dt);
+    player.skill2Cooldown = Math.max(0, player.skill2Cooldown - dt);
     player.dashTimer = Math.max(0, player.dashTimer - dt);
     player.hurtCooldown = Math.max(0, player.hurtCooldown - dt);
 
@@ -486,8 +529,11 @@ export class Game {
     }
 
     const input = player.input;
-    if (input.mx !== 0 || input.my !== 0) player.facing = Math.atan2(input.my, input.mx);
-    if (input.aimX !== 0 || input.aimY !== 0) player.facing = Math.atan2(input.aimY, input.aimX);
+    if (input.mx !== 0 || input.my !== 0) {
+      player.facing = cardinalFacing(input.mx, input.my);
+    } else if (input.aimX !== 0 || input.aimY !== 0) {
+      player.facing = cardinalFacing(input.aimX, input.aimY);
+    }
 
     if (input.dash && player.dashCooldown === 0 && (input.mx !== 0 || input.my !== 0)) {
       player.dashCooldown = 2.2;
@@ -498,6 +544,42 @@ export class Game {
     const moved = moveWithCollision(this.dungeon.tiles, player.x, player.y, input.mx * speed * dt, input.my * speed * dt, 11);
     player.x = moved.x;
     player.y = moved.y;
+
+    if (input.skill1 && player.skill1Cooldown === 0) {
+      player.skill1Cooldown = player.path === 'berserker' ? 4.5 : player.cls === 'mage' ? 7 : 6;
+      if (player.cls === 'warrior') {
+        const range = player.path === 'juggernaut' ? 94 : 78;
+        for (const enemy of this.enemies) {
+          if (dist(player.x, player.y, enemy.x, enemy.y) <= range) {
+            this.damageEnemy(enemy, Math.round(this.rollDamage(stats) * (player.path === 'berserker' ? 1.8 : 1.5)), player);
+          }
+        }
+        this.spawnFx('slash', player.x, player.y, player.facing);
+      } else if (player.cls === 'ranger') {
+        this.fireSkillVolley(player, stats, player.path === 'sharpshooter' ? 7 : 5, 0.28, 330, 1.15);
+      } else {
+        const radius = player.path === 'elementalist' ? 104 : 86;
+        const x = player.x + Math.cos(player.facing) * 72;
+        const y = player.y + Math.sin(player.facing) * 72;
+        this.damageArea(x, y, radius, Math.round(this.rollDamage(stats) * 1.7), player);
+        this.spawnFx('hit', x, y, 0);
+      }
+    }
+
+    if (input.skill2 && player.skill2Cooldown === 0) {
+      player.skill2Cooldown = player.cls === 'mage' ? 10 : 9;
+      if (player.cls === 'warrior') {
+        player.hp = Math.min(stats.maxHp, player.hp + Math.round(stats.maxHp * 0.3));
+        this.spawnFx('levelup', player.x, player.y, 0);
+      } else if (player.cls === 'ranger') {
+        player.dashTimer = player.path === 'trickster' ? 0.55 : 0.35;
+        this.fireSkillVolley(player, stats, player.path === 'sharpshooter' ? 5 : 3, 0.12, 420, 0.9);
+      } else {
+        const radius = player.path === 'arcanist' ? 110 : 88;
+        this.damageArea(player.x, player.y, radius, Math.round(this.rollDamage(stats) * 1.35), player);
+        this.spawnFx('levelup', player.x, player.y, 0);
+      }
+    }
 
     if (input.attack && player.attackCooldown === 0) {
       const base = CLASS_BASE[player.cls];
@@ -512,7 +594,7 @@ export class Game {
           life: 1.1,
           damage: this.rollDamage(stats),
           hostile: false,
-          radius: 6,
+          radius: player.cls === 'mage' ? 9 : 6,
           ownerId: player.id,
         });
       } else {
@@ -526,6 +608,32 @@ export class Game {
           if (delta > MELEE_ARC) continue;
           this.damageEnemy(enemy, this.rollDamage(stats), player);
         }
+      }
+    }
+  }
+
+  private fireSkillVolley(player: Player, stats: Stats, shots: number, spread: number, speed: number, damageMult: number): void {
+    for (let i = 0; i < shots; i++) {
+      const angle = player.facing + (shots === 1 ? 0 : -spread + (spread * 2 * i) / (shots - 1));
+      this.projectiles.push({
+        id: nextId('p'),
+        x: player.x,
+        y: player.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1.2,
+        damage: Math.round(this.rollDamage(stats) * damageMult),
+        hostile: false,
+        radius: 6,
+        ownerId: player.id,
+      });
+    }
+  }
+
+  private damageArea(x: number, y: number, radius: number, amount: number, source: Player): void {
+    for (const enemy of this.enemies) {
+      if (enemy.hp > 0 && dist(x, y, enemy.x, enemy.y) <= radius + enemy.arch.radius) {
+        this.damageEnemy(enemy, amount, source);
       }
     }
   }
@@ -773,7 +881,13 @@ export class Game {
           if (enemy.hp <= 0) continue;
           if (dist(enemy.x, enemy.y, projectile.x, projectile.y) < projectile.radius + enemy.arch.radius) {
             const owner = projectile.ownerId ? this.players.get(projectile.ownerId) : undefined;
-            if (owner) this.damageEnemy(enemy, projectile.damage, owner);
+            if (owner) {
+              if (owner.cls === 'mage') {
+                this.damageArea(projectile.x, projectile.y, 46, projectile.damage, owner);
+              } else {
+                this.damageEnemy(enemy, projectile.damage, owner);
+              }
+            }
             projectile.life = 0;
             break;
           }
@@ -812,6 +926,8 @@ export class Game {
         id: player.id,
         name: player.name,
         cls: player.cls,
+        path: player.path,
+        pendingPath: player.pendingPath,
         x: player.x,
         y: player.y,
         facing: player.facing,
@@ -825,6 +941,8 @@ export class Game {
         reviveProgress: player.reviveProgress / REVIVE_SECONDS,
         attackCooldown: player.attackCooldown,
         dashCooldown: player.dashCooldown,
+        skill1Cooldown: player.skill1Cooldown,
+        skill2Cooldown: player.skill2Cooldown,
         potions: player.potions,
         stats,
         equipment: player.equipment,

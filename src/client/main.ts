@@ -19,6 +19,18 @@ let roomCode = '';
 let selectedClass: ClassId = 'warrior';
 let started = false;
 
+const classPicker = el('class-picker');
+const selectClass = (option: HTMLElement): void => {
+  const cls = option.dataset.class;
+  if (cls !== 'warrior' && cls !== 'ranger' && cls !== 'mage') return;
+  selectedClass = cls;
+  classPicker.querySelectorAll<HTMLElement>('.class-option').forEach((other) => {
+    const selected = other === option;
+    other.classList.toggle('selected', selected);
+    other.setAttribute('aria-pressed', String(selected));
+  });
+};
+
 const net = new Net({
   onJoined: (code, playerId) => {
     roomCode = code;
@@ -58,6 +70,7 @@ const ui = new Ui({
   onTurnInQuest: (questId) => net.send({ type: 'turnInQuest', questId }),
   onRestart: () => net.send({ type: 'restart' }),
   onDescend: () => net.send({ type: 'descend' }),
+  onChoosePath: (path) => net.send({ type: 'choosePath', path }),
 });
 
 const input = new InputController(canvas, {
@@ -67,12 +80,11 @@ const input = new InputController(canvas, {
   onToggleQuests: () => ui.toggleQuests(),
 });
 
-document.querySelectorAll<HTMLElement>('.class-option').forEach((option) => {
-  option.addEventListener('click', () => {
-    document.querySelectorAll('.class-option').forEach((other) => other.classList.remove('selected'));
-    option.classList.add('selected');
-    selectedClass = option.dataset.class === 'ranger' ? 'ranger' : 'warrior';
-  });
+classPicker.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const option = target.closest<HTMLElement>('.class-option');
+  if (option) selectClass(option);
 });
 
 const heroName = (): string => el<HTMLInputElement>('input-name').value.trim() || 'Hero';

@@ -1,4 +1,4 @@
-import { Item, PlayerView, Quest, RARITY_COLOR, Snapshot, Stats } from '../shared/protocol.js';
+import { HeroPath, Item, PlayerView, Quest, RARITY_COLOR, Snapshot, Stats } from '../shared/protocol.js';
 
 export interface UiHooks {
   onEquip: (itemId: string) => void;
@@ -7,6 +7,7 @@ export interface UiHooks {
   onTurnInQuest: (questId: string) => void;
   onRestart: () => void;
   onDescend: () => void;
+  onChoosePath: (path: HeroPath) => void;
 }
 
 const el = <T extends HTMLElement>(id: string): T => {
@@ -28,10 +29,33 @@ function statLine(stats: Partial<Stats>): string {
 export class Ui {
   private gearOpen = false;
   private questsOpen = false;
+  private pathChoiceClass: PlayerView['cls'] | null = null;
 
   constructor(private hooks: UiHooks) {
     el('btn-gear').addEventListener('click', () => this.toggleGear());
     el('btn-quests').addEventListener('click', () => this.toggleQuests());
+    el('path-choice').addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const button = target.closest<HTMLButtonElement>('[data-path]');
+      const path = button?.dataset.path;
+      if (
+        path === 'juggernaut' ||
+        path === 'berserker' ||
+        path === 'sharpshooter' ||
+        path === 'trickster' ||
+        path === 'arcanist' ||
+        path === 'elementalist'
+      ) {
+        this.hooks.onChoosePath(path);
+      }
+    });
+    el('btn-restart').addEventListener('click', () => {
+      el('banner-message').textContent = 'Restarting…';
+      el('btn-restart').setAttribute('disabled', 'true');
+      this.hooks.onRestart();
+    });
+    el('btn-descend').addEventListener('click', () => this.hooks.onDescend());
     document.querySelectorAll<HTMLElement>('[data-close]').forEach((button) => {
       button.addEventListener('click', () => {
         const target = button.dataset.close;
@@ -55,13 +79,75 @@ export class Ui {
     const self = snapshot.players.find((player) => player.id === selfId);
     el('floor-info').textContent = `Floor ${snapshot.floor} — ${snapshot.seedName}`;
     el('room-info').textContent = `Room ${code} · ${snapshot.players.length}/2`;
+    if (self) {
+      const choice = el('path-choice');
+      choice.classList.toggle('hidden', !self.pendingPath);
+      if (self.pendingPath) {
+        if (this.pathChoiceClass !== self.cls) {
+          const warrior = self.cls === 'warrior';
+          const ranger = self.cls === 'ranger';
+          choice.innerHTML = `<strong>Choose your path</strong><div class="path-options">
+            <button data-path="${warrior ? 'juggernaut' : ranger ? 'sharpshooter' : 'arcanist'}" type="button">${warrior ? 'Juggernaut' : ranger ? 'Sharpshooter' : 'Arcanist'}<span>${
+              warrior ? 'More health and armor' : ranger ? 'More power and precision' : 'Bigger spell bursts and damage'
+            }</span></button>
+            <button data-path="${warrior ? 'berserker' : ranger ? 'trickster' : 'elementalist'}" type="button">${warrior ? 'Berserker' : ranger ? 'Trickster' : 'Elementalist'}<span>${
+              warrior ? 'More damage and ferocity' : ranger ? 'More speed and mobility' : 'Larger elemental zones and vitality'
+            }</span></button>
+          </div>`;
+          this.pathChoiceClass = self.cls;
+        }
+      } else {
+        this.pathChoiceClass = null;
+      }
+    }
+    if (self) {
+      const skill1 =
+        self.path === 'juggernaut'
+          ? 'Titanic spin'
+          : self.path === 'berserker'
+            ? 'Blood whirlwind'
+            : self.path === 'sharpshooter'
+              ? 'Arrow storm'
+              : self.path === 'trickster'
+                ? 'Fan volley'
+                : self.path === 'arcanist'
+                  ? 'Arcane burst'
+                  : self.path === 'elementalist'
+                    ? 'Meteor field'
+                    : self.cls === 'warrior'
+                      ? 'Whirlwind'
+                      : self.cls === 'mage'
+                        ? 'Arcane burst'
+                        : 'Volley';
+      const skill2 =
+        self.path === 'juggernaut'
+          ? 'Rally'
+          : self.path === 'berserker'
+            ? 'War cry'
+            : self.path === 'sharpshooter'
+              ? 'Execution shot'
+              : self.path === 'trickster'
+                ? 'Blink shot'
+                : self.path === 'arcanist'
+                  ? 'Void nova'
+                  : self.path === 'elementalist'
+                    ? 'Frost nova'
+                    : self.cls === 'warrior'
+                      ? 'Rally'
+                      : self.cls === 'mage'
+                        ? 'Void nova'
+                        : 'Evasive shot';
+      el('skill-info').textContent = `${skill1} [Z] ${self.skill1Cooldown > 0 ? `${self.skill1Cooldown.toFixed(1)}s` : 'READY'} · ${skill2} [X] ${
+        self.skill2Cooldown > 0 ? `${self.skill2Cooldown.toFixed(1)}s` : 'READY'
+      }`;
+    }
 
     el('party').innerHTML = snapshot.players
       .map((player) => {
         const hp = Math.max(0, (player.hp / player.maxHp) * 100);
         const xp = Math.min(100, (player.xp / player.xpToLevel) * 100);
         return `<div class="party-card">
-          <div><strong>${player.name}</strong> · ${player.cls} L${player.level}${player.alive ? '' : ' · DOWN'}</div>
+          <div><strong>${player.name}</strong> · ${player.cls}${player.path ? ` · ${player.path}` : ''} L${player.level}${player.alive ? '' : ' · DOWN'}</div>
           <div class="bar hp"><div style="width:${hp}%"></div></div>
           <div class="bar xp"><div style="width:${xp}%"></div></div>
           <div class="stats">${player.hp}/${player.maxHp} hp · ${player.gold}g · ${player.potions} potion(s)</div>
@@ -72,19 +158,27 @@ export class Ui {
     el('log').innerHTML = snapshot.log.map((line) => `<div>${line}</div>`).join('');
 
     const banner = el('banner');
+    const bannerMessage = el('banner-message');
+    const restartButton = el('btn-restart');
+    const descendButton = el('btn-descend');
     if (snapshot.phase === 'wiped') {
       banner.classList.remove('hidden');
-      banner.innerHTML = '<div>The party has fallen</div><button id="btn-restart" type="button">Restart run</button>';
-      el('btn-restart').addEventListener('click', this.hooks.onRestart, { once: true });
+      bannerMessage.textContent = 'The party has fallen';
+      restartButton.classList.remove('hidden');
+      restartButton.removeAttribute('disabled');
+      descendButton.classList.add('hidden');
     } else if (snapshot.exit.open && self) {
       const near = Math.hypot(self.x - snapshot.exit.x, self.y - snapshot.exit.y) < 60;
       banner.classList.toggle('hidden', !near);
       if (near) {
-        banner.innerHTML = '<div>Stairs down</div><button id="btn-descend" type="button">Descend (E)</button>';
-        el('btn-descend').addEventListener('click', this.hooks.onDescend, { once: true });
+        bannerMessage.textContent = 'Stairs down';
+        restartButton.classList.add('hidden');
+        descendButton.classList.remove('hidden');
       }
     } else {
       banner.classList.add('hidden');
+      restartButton.classList.add('hidden');
+      descendButton.classList.add('hidden');
     }
 
     if (self) {
