@@ -29,11 +29,6 @@ const INVENTORY_SIZE = 18;
 const MAX_ACTIVE_QUESTS = 3;
 const BOSS_EVERY = 5;
 
-function cardinalFacing(x: number, y: number): number {
-  if (Math.abs(x) >= Math.abs(y)) return x >= 0 ? 0 : Math.PI;
-  return y >= 0 ? Math.PI / 2 : -Math.PI / 2;
-}
-
 interface Player {
   id: string;
   name: string;
@@ -98,6 +93,7 @@ interface Drop {
   kind: 'item' | 'gold' | 'potion';
   amount: number;
   item?: Item;
+  ownerId?: string;
 }
 
 interface Fx {
@@ -255,6 +251,24 @@ export class Game {
     const [item] = player.inventory.splice(index, 1);
     player.gold += item.value;
     this.pushLog(`${player.name} sells ${item.name} for ${item.value}g.`);
+  }
+
+  dropItem(id: string, itemId: string): void {
+    const player = this.players.get(id);
+    if (!player || !player.alive) return;
+    const index = player.inventory.findIndex((item) => item.id === itemId);
+    if (index < 0) return;
+    const [item] = player.inventory.splice(index, 1);
+    this.drops.push({
+      id: nextId('d'),
+      x: player.x,
+      y: player.y,
+      kind: 'item',
+      amount: 1,
+      item,
+      ownerId: player.id,
+    });
+    this.pushLog(`${player.name} drops ${item.name} to share with the party.`);
   }
 
   drinkPotion(id: string): void {
@@ -530,9 +544,9 @@ export class Game {
 
     const input = player.input;
     if (input.mx !== 0 || input.my !== 0) {
-      player.facing = cardinalFacing(input.mx, input.my);
+      player.facing = Math.atan2(input.my, input.mx);
     } else if (input.aimX !== 0 || input.aimY !== 0) {
-      player.facing = cardinalFacing(input.aimX, input.aimY);
+      player.facing = Math.atan2(input.aimY, input.aimX);
     }
 
     if (input.dash && player.dashCooldown === 0 && (input.mx !== 0 || input.my !== 0)) {
@@ -901,7 +915,10 @@ export class Game {
     const remaining: Drop[] = [];
     for (const drop of this.drops) {
       const looter = [...this.players.values()].find(
-        (player) => player.alive && dist(player.x, player.y, drop.x, drop.y) < PICKUP_RADIUS,
+        (player) =>
+          player.alive &&
+          player.id !== drop.ownerId &&
+          dist(player.x, player.y, drop.x, drop.y) < PICKUP_RADIUS,
       );
       if (!looter) {
         remaining.push(drop);

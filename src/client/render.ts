@@ -80,7 +80,9 @@ export class Renderer {
 
     ctx.save();
     ctx.translate(player.x, player.y);
-    ctx.rotate(player.facing);
+    const flip = Math.cos(player.facing) < 0;
+    ctx.rotate(player.facing + (flip ? -Math.PI : 0));
+    if (flip) ctx.scale(-1, 1);
     ctx.globalAlpha = player.alive ? 1 : 0.55;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
@@ -703,11 +705,6 @@ export class Renderer {
       const color = CLASS_COLOR[player.cls] ?? '#ffffff';
       this.drawHeroSprite(player, color);
       ctx.globalAlpha = player.alive ? 1 : 0.4;
-      ctx.strokeStyle = player.id === selfId ? '#ffffff' : 'rgba(255,255,255,0.35)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, 17, 0, Math.PI * 2);
-      ctx.stroke();
       ctx.globalAlpha = 1;
 
       ctx.fillStyle = '#000';

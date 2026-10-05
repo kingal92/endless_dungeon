@@ -156,6 +156,8 @@ export type ClientMessage =
   | { type: 'input'; input: InputState }
   | { type: 'equip'; itemId: string }
   | { type: 'sell'; itemId: string }
+  | { type: 'drop'; itemId: string }
+  | { type: 'keepalive' }
   | { type: 'potion' }
   | { type: 'acceptQuest'; questId: string }
   | { type: 'turnInQuest'; questId: string }

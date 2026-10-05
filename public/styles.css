@@ -30,6 +30,7 @@ canvas {
   display: block;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   image-rendering: pixelated;
 }
 
@@ -269,6 +270,9 @@ input {
   inset: 0;
   display: grid;
   place-items: center;
+  overflow-y: auto;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   background: radial-gradient(circle at 50% 30%, #1a1f33, #05060a 70%);
   z-index: 30;
 }
@@ -369,8 +373,8 @@ input {
 
 .stick {
   position: absolute;
-  left: 22px;
-  bottom: 22px;
+  left: max(22px, env(safe-area-inset-left));
+  bottom: max(22px, env(safe-area-inset-bottom));
   width: 128px;
   height: 128px;
   border-radius: 50%;
@@ -392,8 +396,8 @@ input {
 
 #touch-actions {
   position: absolute;
-  right: 22px;
-  bottom: 22px;
+  right: max(22px, env(safe-area-inset-right));
+  bottom: max(22px, env(safe-area-inset-bottom));
   display: grid;
   grid-template-columns: repeat(2, auto);
   gap: 10px;

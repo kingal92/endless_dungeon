@@ -8,7 +8,12 @@
     />
     <meta name="theme-color" content="#0a0b10" />
     <meta name="description" content="Endless Dungeon — two-player online co-op dungeon crawler with loot, XP, bosses and quests." />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Endless Dungeon" />
     <title>Endless Dungeon — 2 Player Co-op</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="icon" href="data:," />
   </head>
@@ -50,6 +55,7 @@
       <header><h2>Gear</h2><button class="close" data-close="panel-gear" type="button">✕</button></header>
       <div id="gear-equipped"></div>
       <h3>Backpack</h3>
+      <p class="hint">Drop gear to share it; your teammate can pick it up from the floor.</p>
       <div id="gear-inventory"></div>
     </div>
 
@@ -83,6 +89,8 @@
           <input id="input-code" maxlength="4" placeholder="CODE" />
           <button id="btn-join" type="button">Join</button>
         </div>
+        <button id="btn-install" type="button">Install app</button>
+        <p id="install-help" class="hint hidden"></p>
         <p id="menu-error" class="error"></p>
         <p class="hint">
           PC: WASD/arrows to move · mouse to aim · click or Space to attack · Z/X skills · Shift to dash · Q potion · E descend ·

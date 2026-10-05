@@ -10,6 +10,11 @@ const el = <T extends HTMLElement>(id: string): T => {
   return found as T;
 };
 
+interface InstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
 const canvas = el<HTMLCanvasElement>('game');
 const renderer = new Renderer(canvas);
 
@@ -66,6 +71,7 @@ const net = new Net({
 const ui = new Ui({
   onEquip: (itemId) => net.send({ type: 'equip', itemId }),
   onSell: (itemId) => net.send({ type: 'sell', itemId }),
+  onDrop: (itemId) => net.send({ type: 'drop', itemId }),
   onAcceptQuest: (questId) => net.send({ type: 'acceptQuest', questId }),
   onTurnInQuest: (questId) => net.send({ type: 'turnInQuest', questId }),
   onRestart: () => net.send({ type: 'restart' }),
@@ -79,6 +85,45 @@ const input = new InputController(canvas, {
   onToggleGear: () => ui.toggleGear(),
   onToggleQuests: () => ui.toggleQuests(),
 });
+
+let installPrompt: InstallPromptEvent | null = null;
+const installButton = el<HTMLButtonElement>('btn-install');
+const installHelp = el<HTMLParagraphElement>('install-help');
+if (window.matchMedia('(display-mode: standalone)').matches) installButton.classList.add('hidden');
+
+window.addEventListener('beforeinstallprompt', (event: Event) => {
+  event.preventDefault();
+  installPrompt = event as InstallPromptEvent;
+});
+
+window.addEventListener('appinstalled', () => {
+  installPrompt = null;
+  installButton.classList.add('hidden');
+  installHelp.classList.add('hidden');
+});
+
+installButton.addEventListener('click', async () => {
+  if (installPrompt) {
+    await installPrompt.prompt();
+    const choice = await installPrompt.userChoice;
+    if (choice.outcome === 'accepted') installButton.classList.add('hidden');
+    installPrompt = null;
+    return;
+  }
+
+  installHelp.textContent = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    ? 'In Safari, tap Share, then Add to Home Screen.'
+    : 'Open your browser menu and choose Install app or Add to Home screen.';
+  installHelp.classList.toggle('hidden');
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/service-worker.js').catch((error: unknown) => {
+      console.error('Could not register the offline app shell:', error);
+    });
+  });
+}
 
 classPicker.addEventListener('click', (event) => {
   const target = event.target;

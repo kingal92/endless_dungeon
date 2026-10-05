@@ -3,6 +3,7 @@ import { HeroPath, Item, PlayerView, Quest, RARITY_COLOR, Snapshot, Stats } from
 export interface UiHooks {
   onEquip: (itemId: string) => void;
   onSell: (itemId: string) => void;
+  onDrop: (itemId: string) => void;
   onAcceptQuest: (questId: string) => void;
   onTurnInQuest: (questId: string) => void;
   onRestart: () => void;
@@ -225,6 +226,14 @@ export class Ui {
           this.hooks.onSell(String(button.dataset.sell));
         }, { once: true }),
       );
+    el('gear-inventory')
+      .querySelectorAll<HTMLElement>('[data-drop]')
+      .forEach((button) =>
+        button.addEventListener('pointerdown', (event) => {
+          event.preventDefault();
+          this.hooks.onDrop(String(button.dataset.drop));
+        }, { once: true }),
+      );
   }
 
   private itemRow(item: Item): string {
@@ -237,6 +246,7 @@ export class Ui {
       </div>
       <div class="row-actions">
         <button data-equip="${item.id}" type="button">Equip</button>
+        <button data-drop="${item.id}" type="button">Drop</button>
         <button data-sell="${item.id}" type="button">Sell</button>
       </div>
     </div>`;

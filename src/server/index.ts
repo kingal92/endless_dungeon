@@ -112,6 +112,8 @@ wss.on('connection', (socket) => {
     const id = client.playerId;
 
     switch (message.type) {
+      case 'keepalive':
+        break;
       case 'input':
         game.setInput(id, message.input);
         break;
@@ -123,6 +125,9 @@ wss.on('connection', (socket) => {
         break;
       case 'sell':
         game.sell(id, String(message.itemId));
+        break;
+      case 'drop':
+        game.dropItem(id, String(message.itemId));
         break;
       case 'potion':
         game.drinkPotion(id);

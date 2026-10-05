@@ -10,6 +10,7 @@ export interface NetHooks {
 export class Net {
   private socket: WebSocket | null = null;
   private queue: ClientMessage[] = [];
+  private keepaliveTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(private hooks: NetHooks) {}
 
@@ -21,6 +22,11 @@ export class Net {
     socket.addEventListener('open', () => {
       for (const message of this.queue) socket.send(JSON.stringify(message));
       this.queue = [];
+      this.keepaliveTimer = setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: 'keepalive' }));
+        }
+      }, 60_000);
     });
     socket.addEventListener('message', (event) => {
       const message = JSON.parse(String(event.data)) as ServerMessage;
@@ -28,7 +34,11 @@ export class Net {
       else if (message.type === 'snapshot') this.hooks.onSnapshot(message.snapshot);
       else if (message.type === 'error') this.hooks.onError(message.message);
     });
-    socket.addEventListener('close', () => this.hooks.onClose());
+    socket.addEventListener('close', () => {
+      if (this.keepaliveTimer !== null) clearInterval(this.keepaliveTimer);
+      this.keepaliveTimer = null;
+      this.hooks.onClose();
+    });
     socket.addEventListener('error', () => this.hooks.onError('Connection failed.'));
   }
 

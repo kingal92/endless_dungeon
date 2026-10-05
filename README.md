@@ -33,6 +33,21 @@ first, join with the code in the second, both press **Ready up**.
 
 Dev mode with rebuild-on-save: `npm run dev`.
 
+### Install on a phone
+
+Deploy the game to a public HTTPS address, then open that address on the phone. On Android,
+tap **Install app** in the game or choose **Install app / Add to Home screen** in the browser menu.
+On iPhone or iPad, open the link in Safari, tap **Share**, then **Add to Home Screen**. The installed
+app still needs an internet connection to play.
+
+### Play together from different networks
+
+Both players must open the same public HTTPS deployment; the game uses that host for its WebSocket
+connection automatically. One player creates a dungeon and sends the four-character room code to
+the other player. Localhost addresses only work on the computer running the server and cannot be
+used by a friend on another network. Keep the deployment to one server instance; active rooms are
+stored in that server's memory.
+
 ### Controls
 
 | Action | PC | Mobile |
@@ -49,18 +64,29 @@ Dev mode with rebuild-on-save: `npm run dev`.
 
 Any host that can run a Docker container with WebSockets works. Two ready-made configs:
 
-**Fly.io** (scales to zero, roughly $0–3/month for light traffic):
+**Fly.io** (paid hosting; not recommended if you need a free always-on server):
 
 ```bash
 fly launch --copy-config --no-deploy
 fly secrets set LICENSE_SECRET="$(openssl rand -hex 32)"   # only if you want the paywall
-fly deploy
+fly deploy --ha=false
 ```
 
-**Render**: point a new Blueprint at `render.yaml`, then set `LICENSE_SECRET` in the dashboard.
+Keep `--ha=false` on redeploys: active rooms live in one server's memory and aren't shared between
+multiple machines.
 
-The server serves the client bundle and the WebSocket endpoint from the same origin and port, so no
-CORS or separate CDN setup is needed. `/healthz` is the health probe.
+**Render free tier**: connect the repository in Render and create a Blueprint from `render.yaml`;
+choose the Free plan when prompted. Keep the service to one instance because active rooms are held
+in memory. Free services can sleep after 15 minutes without inbound traffic and may restart, so the
+game sends a keepalive while a player is connected. Room progress is lost if the server restarts or
+both players disconnect long enough for it to sleep. Render includes up to 750 free service hours
+per workspace each month. Add `LICENSE_SECRET` in the dashboard only if you want to enable the
+optional paywall.
+
+The server serves the client bundle and WebSocket endpoint from the same origin and port, so both
+players use one URL and no separate WebSocket address is needed. Use the public HTTPS URL returned
+by the host after deployment; `/healthz` is the health probe. The app shell is cached for quick
+launches, but joining or creating a dungeon requires the server to be reachable.
 
 ## Selling it for $5
 
